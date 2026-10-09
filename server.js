@@ -4,7 +4,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 let users = [
-    { email: 'admin@incandescence.dj', pass: 'admin123', role: 'admin', active: true }
+    { email: 'badrikaed2024@gmail.com', pass: 'admin123', role: 'admin', active: true }
 ];
 
 app.get('/manifest.json', (req, res) => {
@@ -316,4 +316,4 @@ app.post('/report', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-});// (انسخ الكود أعلاه كاملاً والصقه هنا واضغط إدخال)
+});
