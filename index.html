@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حاسبة الطاقة الشمسية - L'INCANDESCENCE</title>
+    <style>
+        body { font-family: Tahoma, Arial, sans-serif; background: #f4f6f9; color: #333; margin: 0; padding: 20px; direction: rtl; }
+        .container { max-width: 600px; margin: auto; background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h1 { color: #d97706; text-align: center; font-size: 24px; margin-bottom: 5px; }
+        .subtitle { text-align: center; color: #666; font-size: 14px; margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        button { background: #d97706; color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #b45309; }
+        .result { margin-top: 20px; padding: 15px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>L'INCANDESCENCE</h1>
+        <div class="subtitle">حاسبة أنظمة الطاقة الشمسية - جيبوتي</div>
+        
+        <div class="form-group">
+            <label>اختر باقة الحمل المطلوب:</label>
+            <select id="packageType">
+                <option value="ac">باقة تشغيل مكيف 1.5 حصان 24/7 (ديمي 6 كيلو)</option>
+                <option value="3kw">باقة 3 كيلو (إضاءة، تلفزيون، ثلاجة)</option>
+                <option value="6kw">باقة 6 كيلو (مكيف 1 حصان + أحمال منزلية)</option>
+                <option value="8kw">باقة 8 كيلو (مكيفين + أحمال كاملة)</option>
+                <option value="10kw">باقة 10 كيلو (3 مكيفات + أحمال واسعة)</option>
+            </select>
+        </div>
+
+        <button onclick="calculateSystem()">حساب تفاصيل المنظومة</button>
+
+        <div id="resultBox" class="result">
+            <h3 style="margin-top:0; color:#b45309;">نتائج الدراسة الفنية:</h3>
+            <p id="resultText"></p>
+        </div>
+    </div>
+
+    <script>
+        function calculateSystem() {
+            const type = document.getElementById('packageType').value;
+            let text = "";
+            if(type === 'ac') {
+                text = "<strong>المحولات:</strong> ديمي 6 كيلو هجين (48 فولت)<br><strong>المنظومة البطارية:</strong> 15 كيلوواط ساعة LiFePO4<br><strong>الألواح (640 واط):</strong> الحد الأدنى 8 ألواح (الموصى به 10 ألواح)";
+            } else if(type === '3kw') {
+                text = "<strong>المحولات:</strong> 3 كيلو هجين (24 فولت)<br><strong>البطارية:</strong> 5.12 كيلوواط ساعة<br><strong>الألواح (640 واط):</strong> الحد الأدنى 4 ألواح (الموصى به 6 ألواح)";
+            } else if(type === '6kw') {
+                text = "<strong>المحولات:</strong> ديمي 6 كيلو هجين (48 فولت)<br><strong>البطارية:</strong> 10.24 كيلوواط ساعة<br><strong>الألواح (640 واط):</strong> الحد الأدنى 6 ألواح (الموصى به 8-10 ألواح)";
+            } else if(type === '8kw') {
+                text = "<strong>المحولات:</strong> ديمي 8 كيلو هجين (48 فولت)<br><strong>البطارية:</strong> 14.3 - 15 كيلوواط ساعة<br><strong>الألواح (640 واط):</strong> الحد الأدنى 10 ألواح (الموصى به 12-14 لوح)";
+            } else if(type === '10kw') {
+                text = "<strong>المحولات:</strong> ديمي 10 كيلو هجين (48 فولت)<br><strong>البطارية:</strong> 20 كيلوواط ساعة (بنك ثنائي)<br><strong>الألواح (640 واط):</strong> الحد الأدنى 12 لوح (الموصى به 16 لوح)";
+            }
+            document.getElementById('resultText').innerHTML = text;
+            document.getElementById('resultBox').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
