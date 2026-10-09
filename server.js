@@ -158,7 +158,7 @@ app.get('/app', (req, res) => {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="manifest" href="/manifest.json">
-        <title id="pageTitle">L'INCANDESCENCE - الحاسبة الهندسية</title>
+        <title id="pageTitle">L'INCANDESCENCE - الحاسبة الهندسية الذكية</title>
         <style>
             body { font-family: Tahoma, sans-serif; background: #f4f7f6; padding: 20px; }
             .box { max-width: 600px; margin: auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -178,7 +178,7 @@ app.get('/app', (req, res) => {
     </head>
     <body>
         <div class="box">
-            <h2>L'INCANDESCENCE</h2>
+            <h2>L'INCANDESCENCE - الحاسبة الذكية</h2>
             <form action="/report" method="POST">
                 <label>اختر لغة واجهة التطبيق / Langue de l'interface:</label>
                 <select id="uiLang" name="uiLang" onchange="changeLang()">
@@ -190,19 +190,10 @@ app.get('/app', (req, res) => {
                 <input type="text" name="client" required placeholder="مثال: مجمع الأحلام">
 
                 <label>إجمالي الأحمال (كيلوواط - kW):</label>
-                <input type="number" step="0.1" name="power" required placeholder="20">
+                <input type="number" step="0.1" name="power" required placeholder="مثال: 5">
 
-                <label>ساعات التشغيل ليلاً (Heures de nuit):</label>
-                <input type="number" name="hours" value="10" required>
-
-                <label>عدد مجموعات الألواح (Strings):</label>
-                <input type="number" name="stringsCount" value="2" required>
-
-                <label>سعر المتر الطولي لسلك الـ DC:</label>
-                <input type="number" step="0.1" name="dcPricePerMeter" value="1.5" required>
-
-                <label>الطول الإجمالي لكابلات الـ DC (أمتار):</label>
-                <input type="number" name="dcTotalMeters" value="50" required>
+                <label>عدد ساعات التشغيل ليلاً فقط (Heures de nuit):</label>
+                <input type="number" name="hours" value="10" required placeholder="مثال: 10">
 
                 <label>لغة إصدار وطباعة التقرير (Langue du rapport PDF):</label>
                 <select name="reportLang">
@@ -211,7 +202,7 @@ app.get('/app', (req, res) => {
                     <option value="en">الإنجليزية (English)</option>
                 </select>
 
-                <button type="submit">إصدار التقرير الفني PDF (Générer le Rapport)</button>
+                <button type="submit">إصدار التقرير الفني الذكي والشامل (Générer le Rapport)</button>
             </form>
             <br>
             <a href="/" style="color:#555; text-decoration:none;">← تسجيل الخروج / Déconnexion</a>
@@ -222,47 +213,48 @@ app.get('/app', (req, res) => {
 });
 
 app.post('/report', (req, res) => {
-    const { client, power, hours, stringsCount, dcPricePerMeter, dcTotalMeters, reportLang } = req.body;
+    const { client, power, hours, reportLang } = req.body;
     const p = parseFloat(power) || 5;
-    const h = parseFloat(hours) || 8;
-    const strCount = parseInt(stringsCount) || 1;
-    const priceM = parseFloat(dcPricePerMeter) || 1;
-    const meters = parseFloat(dcTotalMeters) || 30;
+    const h = parseFloat(hours) || 10;
 
+    const inverterKW = Math.ceil(p * 1.3 * 10) / 10;
     const nightEnergy = p * h;
     const battery = (nightEnergy / (0.8 * 0.95)).toFixed(2);
-    const solarKW = (nightEnergy / 0.75) / 5.5;
+    const solarKW = ((nightEnergy / 0.75) / 5.0) + (p * 0.5); 
     const panels = Math.ceil((solarKW * 1000) / 640);
+    const strCount = Math.max(1, Math.ceil(panels / 12));
     const rails = Math.ceil((panels * 2.3) / 6);
     const midClamps = Math.max(0, panels - 2);
     const endClamps = 4 * Math.ceil(panels / 2);
 
-    const acCurrent = ((p * 1000) / 220);
+    const acCurrent = ((inverterKW * 1000) / 220);
     const acBreaker = Math.ceil(acCurrent * 1.25 / 10) * 10;
     const dcBreakerPerString = Math.ceil((panels * 9 / strCount) * 1.25 / 10) * 10;
     
     const dcCableSize = dcBreakerPerString <= 32 ? "6 mm² (PV Solar Cable)" : "10 mm² (PV Solar Cable)";
     const acCableSize = acCurrent <= 40 ? "10 mm² (AC Copper Cable)" : "16 mm² (AC Copper Cable)";
-    const totalDcCost = (meters * priceM).toFixed(2);
+    const estimatedMeters = panels * 4;
+    const totalDcCost = (estimatedMeters * 1.5).toFixed(2);
 
     const lang = reportLang || 'ar';
     const isAr = lang === 'ar';
     const isFr = lang === 'fr';
 
     const t = {
-        title: isAr ? 'تقرير دراسة منظومة الطاقة الشمسية' : isFr ? 'Rapport d\'Étude du Système Solaire' : 'Solar Energy System Study Report',
+        title: isAr ? 'تقرير دراسة منظومة الطاقة الشمسية (تصميم ذكي تلقائي)' : isFr ? 'Rapport d\'Étude du Système Solaire (Auto)' : 'Solar Energy System Study Report (Auto)',
         client: isAr ? 'العميل / المشروع:' : isFr ? 'Client / Projet:' : 'Client / Project:',
         date: isAr ? 'التاريخ:' : isFr ? 'Date:' : 'Date:',
-        param: isAr ? 'المكون / العنصر' : isFr ? 'Composant / Élément' : 'Component / Element',
-        spec: isAr ? 'القيمة / المواصفات الفنية والأسلاك' : isFr ? 'Spécification / Câblage' : 'Specification / Cabling',
+        param: isAr ? 'المكون / العنصر الهندسي' : isFr ? 'Composant / Élément' : 'Component / Element',
+        spec: isAr ? 'المواصفات الفنية المحسوبة تلقائياً' : isFr ? 'Spécification / Câblage' : 'Specification / Cabling',
         load: isAr ? 'قدرة الأحمال المتصلة' : isFr ? 'Puissance connectée' : 'Connected Load',
+        inverter: isAr ? 'قدرة الانفرتر الهجين المقترحة' : isFr ? 'Onduleur Recommandé' : 'Recommended Inverter',
         batt: isAr ? 'بنك البطاريات المطلوب (ليثيوم)' : isFr ? 'Parc Batteries (Lithium)' : 'Battery Bank (Lithium)',
-        panels: isAr ? 'الألواح الشمسية (640 واط)' : isFr ? 'Panneaux Solaires (640W)' : 'Solar Panels (640W)',
-        dcCable: isAr ? 'سلك الـ DC المناسب لكل مجموعة' : isFr ? 'Section Câble DC par String' : 'DC Cable Section per String',
-        dcCost: isAr ? 'إجمالي أمتار وتكلفة كابلات الـ DC' : isFr ? 'Longueur & Coût Total Câbles DC' : 'DC Cable Length & Total Cost',
-        dcBrk: isAr ? 'قواطع الـ DC لكل مجموعة (String Breakers)' : isFr ? 'Disjoncteurs DC par String' : 'DC Breakers per String',
+        panels: isAr ? 'الألواح الشمسية المطلوبة (640 واط)' : isFr ? 'Panneaux Solaires (640W)' : 'Solar Panels (640W)',
+        dcCable: isAr ? 'سلك وقايس كابلات الـ DC لكل مجموعة' : isFr ? 'Section Câble DC par String' : 'DC Cable Section per String',
+        dcCost: isAr ? 'أمتار وتكلفة كابلات الـ DC التقديرية' : isFr ? 'Longueur & Coût Total Câbles DC' : 'DC Cable Length & Total Cost',
+        dcBrk: isAr ? 'قواطع الحماية للـ DC (String Breakers)' : isFr ? 'Disjoncteurs DC par String' : 'DC Breakers per String',
         acBrk: isAr ? 'قاطع الخروج العمومي AC والكيبل المناسب' : isFr ? 'Disjoncteur AC Général & Câble' : 'General AC Breaker & Cable',
-        rails: isAr ? 'التيبرات المجلفنة وهياكل التثبيت' : isFr ? 'Rails et Fixations' : 'Rails & Mounting Structures',
+        rails: isAr ? 'التيبرات المجلفنة وهياكل التثبيت (Tip-carrière)' : isFr ? 'Rails et Fixations (Tip-carrière)' : 'Rails & Mounting Structures (Tip-carrière)',
         engineer: isAr ? 'إعداد المدير والمهندس: بدري قائد علي عبد الله' : isFr ? 'Ingénieur Directeur : Badri Qaid Ali Abdullah' : 'Lead Engineer & Director: Badri Qaid Ali Abdullah',
         company: isAr ? "L'INCANDESCENCE - جمهورية جيبوتي" : isFr ? "L'INCANDESCENCE - République de Djibouti" : "L'INCANDESCENCE - Republic of Djibouti",
         printBtn: isAr ? 'طباعة التقرير / حفظ كـ PDF قابل للمشاركة' : isFr ? 'Imprimer / Enregistrer en PDF Partageable' : 'Print / Save as Shareable PDF',
@@ -295,14 +287,15 @@ app.post('/report', (req, res) => {
 
         <table>
             <tr><th>${t.param}</th><th>${t.spec}</th></tr>
-            <tr><td>${t.load}</td><td>${p} kW</td></tr>
-            <tr><td>${t.batt}</td><td><b>${battery} kWh</b></td></tr>
-            <tr><td>${t.panels}</td><td><b>${panels} unités (${strCount} Strings)</b></td></tr>
+            <tr><td>${t.load}</td><td>${p} kW (مع ساعات تشغيل ليلية: ${h} ساعات)</td></tr>
+            <tr><td>${t.inverter}</td><td><b>${inverterKW} kW (Hybrid Inverter)</b></td></tr>
+            <tr><td>${t.batt}</td><td><b>${battery} kWh (Lithium Storage)</b></td></tr>
+            <tr><td>${t.panels}</td><td><b>${panels} وحدة (${strCount} مصفوفات/Strings)</b></td></tr>
             <tr><td>${t.dcCable}</td><td><strong>${dcCableSize}</strong></td></tr>
-            <tr><td>${t.dcCost}</td><td><b>${meters} m × ${priceM} = ${totalDcCost}</b></td></tr>
+            <tr><td>${t.dcCost}</td><td><b>حوالي ${estimatedMeters} متر بتكلفة تقديرية</b></td></tr>
             <tr><td>${t.dcBrk}</td><td><strong>${dcBreakerPerString} A</strong></td></tr>
             <tr><td>${t.acBrk}</td><td><strong>${acBreaker} A (${acCableSize})</strong></td></tr>
-            <tr><td>${t.rails}</td><td>${rails} Rails (6m) | ${midClamps} Mid | ${endClamps} End</td></tr>
+            <tr><td>${t.rails}</td><td>${rails} Rails (6m) | ${midClamps} Mid Clamps | ${endClamps} End Clamps</td></tr>
         </table>
 
         <div class="footer">
@@ -323,4 +316,4 @@ app.post('/report', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-});
+});// (انسخ الكود أعلاه كاملاً والصقه هنا واضغط إدخال)
